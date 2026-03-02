@@ -46,11 +46,11 @@ export const loginUser = async (req: Request, res: Response) => {
       where: { email },
     });
     if (!user) {
-      return res.status(400).json({ message: "Invalid credentials" });
+      return res.status(500).json({ message: "Invalid credentials" });
     }
     const passwordMatch = await bcrypt.compare(password, user.password);
     if (!passwordMatch) {
-      return res.status(400).json({ message: "invalid password" });
+      return res.status(500).json({ message: "invalid password" });
     }
     if (!privateKey) {
       throw new Error("JWT_SECRET is not defined in environment variables");
@@ -65,7 +65,7 @@ export const loginUser = async (req: Request, res: Response) => {
       privateKey,
       {
         expiresIn: "7d",
-      }
+      },
     );
     res.status(200).json({ message: "logged in successfully", user, token });
     // res.send(token);

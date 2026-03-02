@@ -29,12 +29,12 @@ const facebookAuth = passport.use(
             username: profile.displayName,
             password: "facebook123",
             email: "nothing@gmail.com",
-            phone_no: 3,
+            phone_no: "3",
           },
         });
         console.log(facebookUser);
       }
-    }
-  )
+    },
+  ),
 );
 export default facebookAuth;

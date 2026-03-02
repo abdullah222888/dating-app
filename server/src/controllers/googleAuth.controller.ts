@@ -33,7 +33,7 @@ passport.use(
               username: profile.displayName,
               email: profile.emails?.[0].value,
               password: "abdullahhere",
-              phone_no: 2,
+              phone_no: "2",
             },
           });
           console.log(googleUser);
@@ -42,8 +42,8 @@ passport.use(
       } catch (error) {
         console.log(error);
       }
-    }
-  )
+    },
+  ),
 );
 
 export default passport;

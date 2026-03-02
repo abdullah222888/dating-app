@@ -1,6 +1,9 @@
 import express, { Request, Response } from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+const { join } = require("node:path");
+const { Server } = require("socket.io");
+const { createServer } = require("node:http");
 import passport from "./controllers/googleAuth.controller";
 import facebookAuth from "./controllers/facebookAuth.controller";
 const AuthRouter = require("../src/routes/auth.routes");
@@ -18,6 +21,10 @@ const forgotPasswordRoutes = require("../src/routes/forgotPassword.routes");
 dotenv.config();
 
 const app = express();
+const server = createServer(app);
+const io = new Server(server, {
+  connectionStateRecovery: {},
+});
 const PORT = process.env.PORT || 5001;
 
 app.use(express.json());
@@ -25,7 +32,9 @@ app.use(cors());
 app.use(passport.initialize());
 
 app.get("/", (req: Request, res: Response) => {
-  res.status(200).json({ message: "RISHTA APP BACKEND is listening on 5001" });
+  res
+    .status(200)
+    .json({ message: `RISHTA APP BACKEND is listening on ${PORT}` });
 });
 
 app.use("/api/auth", AuthRouter);
@@ -79,6 +88,16 @@ app.use("/api", likeRoutes);
 app.use("/api", unlikeRoutes);
 app.use("/api", BlocklistRoutes);
 app.use("/api", forgotPasswordRoutes);
-app.listen(PORT, () => {
+
+// socket io integrations
+
+io.on("connection", (socket) => {
+  // handle disconnect
+  socket.on("disconnect", () => {
+    console.log("user disconnected");
+  });
+});
+
+server.listen(PORT, () => {
   console.log(`Server is listening on PORT ${PORT}`);
 });
