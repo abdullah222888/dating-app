@@ -14,6 +14,7 @@ const policyRoutes = require("../src/routes/privacyPolicy.routes");
 const guidelinesRoutes = require("../src/routes/guidelines.routes");
 const matchRoutes = require("../src/routes/match.routes");
 const likeRoutes = require("../src/routes/like.routes");
+const chatRoutes = require("../src/routes/chat.routes");
 const unlikeRoutes = require("../src/routes/unlikes.routes");
 const BlocklistRoutes = require("../src/routes/blocklist.routes");
 const forgotPasswordRoutes = require("../src/routes/forgotPassword.routes");
@@ -85,6 +86,7 @@ app.use("/api", guidelinesRoutes);
 //match routes
 app.use("/api", matchRoutes);
 app.use("/api", likeRoutes);
+app.use("/api", chatRoutes);
 app.use("/api", unlikeRoutes);
 app.use("/api", BlocklistRoutes);
 app.use("/api", forgotPasswordRoutes);

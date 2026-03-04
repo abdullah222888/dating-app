@@ -4,53 +4,79 @@ import { PrismaClient } from "../../generated/prisma";
 const prisma = new PrismaClient();
 
 export const createLike = async (req: Request, res: Response) => {
-  const { liked_by, liked_to } = req.body;
-  console.log("Received Body", req.body);
-
+  const { sender, receiver } = req.body;
   try {
-    await prisma.like.create({
-      data: { liked_by, liked_to },
-    });
+    // check like exists
+    // if like exists then create a match
+    // if like doesnt exist then create like
+    // user cannot send like to himself
 
-    const mutualLike = await prisma.like.findFirst({
+    const check_sender_like = await prisma.like.findFirst({
       where: {
-        liked_by: liked_to,
-        liked_to: liked_by,
+        liked_by: sender,
+        liked_to: receiver,
       },
     });
 
-    if (!mutualLike) {
-      return res.json({ message: "Like saved! No match Found" });
+    if (check_sender_like) {
+      return res.status(401).json({
+        message: "you have already liked this user",
+      });
+    } else {
+      const check_receiver_like = await prisma.like.findFirst({
+        where: {
+          liked_by: receiver,
+          liked_to: sender,
+        },
+      });
+
+      if (check_receiver_like) {
+        const check_match = await prisma.match.findFirst({
+          where: {
+            OR: [
+              { user_one: sender, user_two: receiver },
+              { user_one: receiver, user_two: sender },
+            ],
+          },
+        });
+        if (check_match) {
+          return res.status(401).json({ message: "match already exists" });
+        } else {
+          await prisma.like.create({
+            data: {
+              liked_by: sender,
+              liked_to: receiver,
+            },
+          });
+
+          const new_match = await prisma.match.create({
+            data: {
+              user_one: sender,
+              user_two: receiver,
+            },
+          });
+          const new_chat = await prisma.chat.create({
+            data: {
+              match_id: new_match.id,
+              participant_one: sender,
+              participant_two: receiver,
+            },
+          });
+          return res.status(201).json({
+            match: new_match,
+            chat: new_chat,
+          });
+        }
+      } else {
+        const new_like = await prisma.like.create({
+          data: {
+            liked_by: sender,
+            liked_to: receiver,
+          },
+        });
+        return res.status(201).json(new_like);
+      }
     }
-
-    const existingMatch = await prisma.match.findFirst({
-      where: {
-        OR: [
-          { user_one: liked_by, user_two: liked_to },
-          { user_one: liked_to, user_two: liked_by },
-        ],
-      },
-    });
-    if (existingMatch) {
-      return res.json({ message: "Match Already Exists", existingMatch });
-    }
-
-    const chat = await prisma.chat.create({
-      data: {
-        participant_one: liked_by,
-        participant_two: liked_to,
-      },
-    });
-
-    const match = await prisma.match.create({
-      data: {
-        user_one: liked_by,
-        user_two: liked_to,
-        chat_id: chat.id,
-      },
-    });
-
-    return res.json({ message: "Match Created Successfully", match });
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Insternal Server Error", error });
